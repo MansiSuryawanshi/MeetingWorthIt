@@ -1,0 +1,118 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #0f1117;
+    color: #e2e8f0;
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    margin: 0;
+  }
+
+  #root {
+    width: 100%;
+    text-align: left;
+  }
+}
+
+@layer components {
+  .card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1.5rem;
+  }
+
+  .input-field {
+    @apply w-full rounded-lg px-3 py-2 text-white text-sm
+           focus:outline-none focus:ring-2 focus:ring-[#00ff87]/40 focus:border-[#00ff87]/40
+           placeholder-white/30 transition-all;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .select-field {
+    @apply w-full rounded-lg px-3 py-2 text-white text-sm
+           focus:outline-none focus:ring-2 focus:ring-[#00ff87]/40 focus:border-[#00ff87]/40
+           transition-all cursor-pointer;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23ffffff50'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1rem;
+    padding-right: 2.5rem;
+  }
+
+  .select-field option {
+    background-color: #1a1f2e;
+    color: white;
+  }
+
+  .cost-number {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 900;
+    font-size: clamp(3rem, 8vw, 5.5rem);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    transition: color 0.5s ease;
+  }
+
+  .btn-primary {
+    @apply w-full py-3.5 px-6 rounded-xl font-semibold text-base transition-all duration-200
+           flex items-center justify-center gap-2;
+    font-family: 'Outfit', sans-serif;
+    background: linear-gradient(135deg, #00ff87, #00cc6a);
+    color: #0f1117;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(0, 255, 135, 0.3);
+  }
+
+  .btn-primary:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .btn-secondary {
+    @apply py-2.5 px-5 rounded-xl font-medium text-sm transition-all duration-200;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .btn-secondary:hover {
+    border-color: rgba(255, 255, 255, 0.4);
+    color: white;
+  }
+
+  .verdict-animate {
+    animation: fadeUp 0.4s ease forwards;
+  }
+
+  .analyzing-pulse {
+    animation: pulseGlow 1.2s ease-in-out infinite;
+  }
+}
+
+@keyframes fadeUp {
+  0% { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }

@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Private files — never push
+PITCH_DECK.md
+TEST_SCENARIOS.md
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

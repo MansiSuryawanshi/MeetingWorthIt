@@ -8,7 +8,9 @@ import SettingsModal from './components/SettingsModal'
 import MeetingHistory from './components/MeetingHistory'
 import MeetingTemplates from './components/MeetingTemplates'
 import TeamModal from './components/TeamModal'
+import CalendarImportModal from './components/CalendarImportModal'
 import { loadTeamMembers, addTeamMember, deleteTeamMember, isFirebaseConfigured } from './lib/firebase'
+import { isGoogleCalendarConfigured } from './lib/googleCalendar'
 
 const RECURRENCE_MULTIPLIERS = {
   'one-time': 1,
@@ -34,6 +36,8 @@ export default function App() {
   const [apiKey, setApiKey] = useState(localStorage.getItem('mwi_api_key') || '')
   const [showSettings, setShowSettings] = useState(false)
   const [showTeam, setShowTeam] = useState(false)
+  const [showCalendarImport, setShowCalendarImport] = useState(false)
+  const [meetLink, setMeetLink] = useState(null)
   const [apiError, setApiError] = useState(null)
   const [history, setHistory] = useState(
     JSON.parse(localStorage.getItem('mwi_history') || '[]')
@@ -95,7 +99,19 @@ export default function App() {
     setApiError(null)
     setAgenda('')
     setContext('')
+    setMeetLink(null)
     setAttendees(template.attendees.map(a => ({ ...a, id: nextId++ })))
+  }, [])
+
+  const handleCalendarImport = useCallback(({ title, duration, recurrence, agenda, meetLink }) => {
+    setMeetingTitle(title)
+    setDuration(duration)
+    setRecurrence(recurrence)
+    setAgenda(agenda || '')
+    setContext('')
+    setVerdict(null)
+    setApiError(null)
+    setMeetLink(meetLink || null)
   }, [])
 
   const saveApiKey = useCallback((key) => {
@@ -214,6 +230,16 @@ Respond with this exact JSON structure:
             </span>
           </div>
           <div className="flex items-center gap-3">
+            {/* Google Calendar import */}
+            {isGoogleCalendarConfigured() && (
+              <button
+                onClick={() => setShowCalendarImport(true)}
+                className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg transition-all"
+                style={{ color: '#93c5fd', background: 'rgba(66,133,244,0.08)', border: '1px solid rgba(66,133,244,0.2)' }}
+              >
+                📅 Import from Calendar
+              </button>
+            )}
             {/* Team button */}
             <button
               onClick={() => setShowTeam(true)}
@@ -258,6 +284,12 @@ Respond with this exact JSON structure:
       <div className="max-w-5xl mx-auto px-4 pb-16 grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         {/* Left column */}
         <div className="space-y-5">
+          {showCalendarImport && (
+            <CalendarImportModal
+              onClose={() => setShowCalendarImport(false)}
+              onImport={handleCalendarImport}
+            />
+          )}
           <MeetingTemplates onApply={applyTemplate} />
           <MeetingForm
             meetingTitle={meetingTitle} setMeetingTitle={setMeetingTitle}
@@ -327,6 +359,8 @@ Respond with this exact JSON structure:
             <VerdictPanel
               verdict={verdict} attendees={attendees}
               annualCost={annualCost} recurrence={recurrence}
+              meetingTitle={meetingTitle} duration={duration} totalCost={totalCost}
+              meetLink={meetLink}
             />
           )}
         </div>

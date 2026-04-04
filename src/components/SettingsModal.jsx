@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { CITIES, INDUSTRIES } from '../data/salaryBenchmarks'
 import { saveFirebaseConfig, clearFirebaseConfig, getStoredFirebaseConfig, testFirebaseConnection } from '../lib/firebase'
+import { getGoogleClientId, saveGoogleClientId, clearGoogleClientId, isGoogleCalendarConfigured } from '../lib/googleCalendar'
 
 export default function SettingsModal({ apiKey, onSave, onClose, city, industry, onSavePrefs }) {
   const [tab, setTab] = useState('api')
@@ -58,9 +59,25 @@ export default function SettingsModal({ apiKey, onSave, onClose, city, industry,
     setFbConnected(false)
   }
 
+  const [gclientId, setGclientId] = useState(getGoogleClientId())
+  const [gcSaved, setGcSaved] = useState(false)
+
+  const handleSaveGoogleClient = () => {
+    if (!gclientId.trim()) return
+    saveGoogleClientId(gclientId.trim())
+    setGcSaved(true)
+    setTimeout(() => setGcSaved(false), 2000)
+  }
+
+  const handleDisconnectGoogle = () => {
+    clearGoogleClientId()
+    setGclientId('')
+  }
+
   const TABS = [
     { id: 'api', label: '🤖 Claude API' },
     { id: 'firebase', label: '🔥 Firebase' },
+    { id: 'gcal', label: '📅 Google Cal' },
     { id: 'prefs', label: '📍 Location' },
   ]
 
@@ -206,6 +223,61 @@ export default function SettingsModal({ apiKey, onSave, onClose, city, industry,
                   style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', color: '#fca5a5' }}
                 >
                   Disconnect Database
+                </button>
+              )}
+            </>
+          )}
+
+          {/* GOOGLE CALENDAR TAB */}
+          {tab === 'gcal' && (
+            <>
+              {isGoogleCalendarConfigured() ? (
+                <div className="flex items-center gap-2 p-3 rounded-lg text-xs"
+                  style={{ background: 'rgba(0,255,135,0.06)', border: '1px solid rgba(0,255,135,0.2)' }}>
+                  <span>📅</span>
+                  <span style={{ color: 'rgba(0,255,135,0.8)' }}>Google Calendar connected. Import meetings from the header.</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 p-3 rounded-lg text-xs"
+                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <span>⚠️</span>
+                  <span className="text-white/40">Not connected. Add your OAuth Client ID below.</span>
+                </div>
+              )}
+              <p className="text-white/40 text-sm leading-relaxed">
+                Paste your Google OAuth Client ID to import meetings directly from Google Calendar.
+              </p>
+              <div
+                className="p-3 rounded-lg text-xs space-y-1"
+                style={{ background: 'rgba(66,133,244,0.06)', border: '1px solid rgba(66,133,244,0.15)' }}
+              >
+                <p className="font-medium" style={{ color: '#93c5fd' }}>Where to get it:</p>
+                <p className="text-white/40">Google Cloud Console → APIs & Services → Credentials → OAuth 2.0 Client ID</p>
+              </div>
+              <div>
+                <label className="block text-xs text-white/30 mb-1.5 uppercase tracking-wider font-medium">Google OAuth Client ID</label>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="123456789-abc.apps.googleusercontent.com"
+                  value={gclientId}
+                  onChange={e => { setGclientId(e.target.value); setGcSaved(false) }}
+                />
+              </div>
+              <button
+                className="btn-primary w-full py-2.5"
+                onClick={handleSaveGoogleClient}
+                disabled={!gclientId.trim()}
+              >
+                {gcSaved ? '✓ Saved!' : isGoogleCalendarConfigured() ? 'Update Client ID' : 'Connect Google Calendar'}
+              </button>
+              {isGoogleCalendarConfigured() && (
+                <button
+                  onClick={handleDisconnectGoogle}
+                  className="w-full py-2 rounded-lg text-sm transition-all"
+                  style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', color: '#fca5a5' }}
+                >
+                  Disconnect Google Calendar
                 </button>
               )}
             </>

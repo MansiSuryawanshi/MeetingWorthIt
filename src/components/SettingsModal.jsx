@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { CITIES, INDUSTRIES } from '../data/salaryBenchmarks'
-import { saveFirebaseConfig, clearFirebaseConfig, getStoredFirebaseConfig } from '../lib/firebase'
+import { saveFirebaseConfig, clearFirebaseConfig, getStoredFirebaseConfig, testFirebaseConnection } from '../lib/firebase'
 
 export default function SettingsModal({ apiKey, onSave, onClose, city, industry, onSavePrefs }) {
   const [tab, setTab] = useState('api')
@@ -13,7 +13,8 @@ export default function SettingsModal({ apiKey, onSave, onClose, city, industry,
   const [fbProjectId, setFbProjectId] = useState(existingFb?.projectId || '')
   const [fbAuthDomain, setFbAuthDomain] = useState(existingFb?.authDomain || '')
   const [fbAppId, setFbAppId] = useState(existingFb?.appId || '')
-  const [fbSaved, setFbSaved] = useState(false)
+  const [fbStatus, setFbStatus] = useState(null) // null | 'testing' | 'success' | 'error'
+  const [fbConnected, setFbConnected] = useState(!!existingFb?.apiKey)
 
   const handleSaveAll = () => {
     onSave(apiInput.trim())
@@ -21,28 +22,41 @@ export default function SettingsModal({ apiKey, onSave, onClose, city, industry,
     onClose()
   }
 
-  const handleSaveFirebase = () => {
-    if (fbApiKey && fbProjectId) {
-      saveFirebaseConfig({
-        apiKey: fbApiKey.trim(),
-        projectId: fbProjectId.trim(),
-        authDomain: fbAuthDomain.trim() || `${fbProjectId.trim()}.firebaseapp.com`,
-        appId: fbAppId.trim(),
-      })
-      setFbSaved(true)
-      setTimeout(() => setFbSaved(false), 2000)
+  const handleRemoveApiKey = () => {
+    localStorage.removeItem('mwi_api_key')
+    setApiInput('')
+    onSave('')
+  }
+
+  const handleConnectFirebase = async () => {
+    if (!fbApiKey || !fbProjectId) return
+    setFbStatus('testing')
+    saveFirebaseConfig({
+      apiKey: fbApiKey.trim(),
+      projectId: fbProjectId.trim(),
+      authDomain: fbAuthDomain.trim() || `${fbProjectId.trim()}.firebaseapp.com`,
+      appId: fbAppId.trim(),
+    })
+    try {
+      await testFirebaseConnection()
+      setFbStatus('success')
+      setFbConnected(true)
+    } catch {
+      setFbStatus('error')
+      clearFirebaseConfig()
+      setFbConnected(false)
     }
   }
 
-  const handleClearFirebase = () => {
+  const handleDisconnectFirebase = () => {
     clearFirebaseConfig()
     setFbApiKey('')
     setFbProjectId('')
     setFbAuthDomain('')
     setFbAppId('')
+    setFbStatus(null)
+    setFbConnected(false)
   }
-
-  const usingCustomFirebase = !!existingFb?.apiKey
 
   const TABS = [
     { id: 'api', label: '🤖 Claude API' },
@@ -83,6 +97,8 @@ export default function SettingsModal({ apiKey, onSave, onClose, city, industry,
         </div>
 
         <div className="p-6 space-y-4">
+
+          {/* CLAUDE API TAB */}
           {tab === 'api' && (
             <>
               <p className="text-white/40 text-sm leading-relaxed">
@@ -101,39 +117,58 @@ export default function SettingsModal({ apiKey, onSave, onClose, city, industry,
                   autoFocus
                 />
               </div>
+
+              {apiInput && (
+                <button
+                  onClick={handleRemoveApiKey}
+                  className="w-full py-2 rounded-lg text-sm transition-all"
+                  style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', color: '#fca5a5' }}
+                >
+                  Remove API Key
+                </button>
+              )}
+
               <p className="text-white/20 text-xs">Get your Claude key at console.anthropic.com</p>
+
+              <div className="flex gap-3 pt-2">
+                <button className="btn-secondary flex-1" onClick={onClose}>Cancel</button>
+                <button className="btn-primary flex-1" onClick={handleSaveAll}>Save</button>
+              </div>
             </>
           )}
 
+          {/* FIREBASE TAB */}
           {tab === 'firebase' && (
             <>
-              <div
-                className="flex items-start gap-2 p-3 rounded-lg text-xs"
-                style={{
-                  background: usingCustomFirebase ? 'rgba(0,255,135,0.06)' : 'rgba(255,255,255,0.04)',
-                  border: `1px solid ${usingCustomFirebase ? 'rgba(0,255,135,0.2)' : 'rgba(255,255,255,0.08)'}`,
-                }}
-              >
-                <span>{usingCustomFirebase ? '🔥' : '🍃'}</span>
-                <span style={{ color: usingCustomFirebase ? 'rgba(0,255,135,0.8)' : 'rgba(255,255,255,0.3)' }}>
-                  {usingCustomFirebase
-                    ? `Using your Firebase project: ${existingFb.projectId}`
-                    : 'Using default shared database. Connect your own Firebase below.'}
-                </span>
-              </div>
+              {/* Status banner */}
+              {fbConnected ? (
+                <div className="flex items-center gap-2 p-3 rounded-lg text-xs"
+                  style={{ background: 'rgba(0,255,135,0.06)', border: '1px solid rgba(0,255,135,0.2)' }}>
+                  <span>🔥</span>
+                  <span style={{ color: 'rgba(0,255,135,0.8)' }}>
+                    Connected to: <strong>{existingFb?.projectId || fbProjectId}</strong>
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 p-3 rounded-lg text-xs"
+                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <span>⚠️</span>
+                  <span className="text-white/40">No database connected. Team features are disabled.</span>
+                </div>
+              )}
 
               <p className="text-white/40 text-sm leading-relaxed">
-                Connect your own Firebase Firestore so your team data is private. Get these values from Firebase Console → Project Settings → Your apps.
+                Connect your Firebase Firestore to enable the team database. Get these values from Firebase Console → Project Settings → Your apps.
               </p>
 
               <div className="space-y-2">
                 <div>
                   <label className="block text-xs text-white/30 mb-1 uppercase tracking-wider font-medium">Firebase API Key</label>
-                  <input type="text" className="input-field" placeholder="AIzaSy..." value={fbApiKey} onChange={e => setFbApiKey(e.target.value)} />
+                  <input type="text" className="input-field" placeholder="AIzaSy..." value={fbApiKey} onChange={e => { setFbApiKey(e.target.value); setFbStatus(null) }} />
                 </div>
                 <div>
                   <label className="block text-xs text-white/30 mb-1 uppercase tracking-wider font-medium">Project ID</label>
-                  <input type="text" className="input-field" placeholder="my-project-id" value={fbProjectId} onChange={e => setFbProjectId(e.target.value)} />
+                  <input type="text" className="input-field" placeholder="my-project-id" value={fbProjectId} onChange={e => { setFbProjectId(e.target.value); setFbStatus(null) }} />
                 </div>
                 <div>
                   <label className="block text-xs text-white/30 mb-1 uppercase tracking-wider font-medium">Auth Domain <span className="normal-case text-white/20">(optional)</span></label>
@@ -145,64 +180,66 @@ export default function SettingsModal({ apiKey, onSave, onClose, city, industry,
                 </div>
               </div>
 
-              <div className="flex gap-2">
+              {fbStatus === 'error' && (
+                <p className="text-xs" style={{ color: '#fca5a5' }}>
+                  ✕ Could not connect. Check your API key and Project ID.
+                </p>
+              )}
+              {fbStatus === 'success' && (
+                <p className="text-xs" style={{ color: '#00ff87' }}>
+                  ✓ Connected successfully! Close and reopen the app to load your team.
+                </p>
+              )}
+
+              <button
+                className="btn-primary w-full py-2.5"
+                onClick={handleConnectFirebase}
+                disabled={!fbApiKey || !fbProjectId || fbStatus === 'testing'}
+              >
+                {fbStatus === 'testing' ? 'Connecting...' : fbConnected ? 'Reconnect' : 'Connect Firebase'}
+              </button>
+
+              {fbConnected && (
                 <button
-                  className="btn-primary flex-1 py-2.5"
-                  onClick={handleSaveFirebase}
-                  disabled={!fbApiKey || !fbProjectId}
+                  onClick={handleDisconnectFirebase}
+                  className="w-full py-2 rounded-lg text-sm transition-all"
+                  style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', color: '#fca5a5' }}
                 >
-                  {fbSaved ? '✓ Saved — reload app' : 'Connect My Firebase'}
+                  Disconnect Database
                 </button>
-                {usingCustomFirebase && (
-                  <button
-                    className="btn-secondary px-4 py-2.5 text-sm"
-                    onClick={handleClearFirebase}
-                  >
-                    Use Default
-                  </button>
-                )}
-              </div>
+              )}
             </>
           )}
 
+          {/* LOCATION TAB */}
           {tab === 'prefs' && (
             <>
               <p className="text-white/40 text-sm leading-relaxed">
                 Used to show accurate market salary benchmarks for your location and industry.
               </p>
               <div>
-                <label className="block text-xs text-white/30 mb-1.5 uppercase tracking-wider font-medium">
-                  City / Location
-                </label>
+                <label className="block text-xs text-white/30 mb-1.5 uppercase tracking-wider font-medium">City / Location</label>
                 <select className="select-field" value={cityInput} onChange={e => setCityInput(e.target.value)}>
                   {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-white/30 mb-1.5 uppercase tracking-wider font-medium">
-                  Industry
-                </label>
+                <label className="block text-xs text-white/30 mb-1.5 uppercase tracking-wider font-medium">Industry</label>
                 <select className="select-field" value={industryInput} onChange={e => setIndustryInput(e.target.value)}>
                   {INDUSTRIES.map(i => <option key={i} value={i}>{i}</option>)}
                 </select>
               </div>
-              <div
-                className="rounded-lg p-3 text-xs"
-                style={{ background: 'rgba(0,255,135,0.06)', border: '1px solid rgba(0,255,135,0.15)' }}
-              >
-                <p style={{ color: 'rgba(0,255,135,0.7)' }}>
-                  💡 Benchmarks set to {cityInput} · {industryInput}
-                </p>
+              <div className="rounded-lg p-3 text-xs"
+                style={{ background: 'rgba(0,255,135,0.06)', border: '1px solid rgba(0,255,135,0.15)' }}>
+                <p style={{ color: 'rgba(0,255,135,0.7)' }}>💡 Benchmarks set to {cityInput} · {industryInput}</p>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button className="btn-secondary flex-1" onClick={onClose}>Cancel</button>
+                <button className="btn-primary flex-1" onClick={handleSaveAll}>Save</button>
               </div>
             </>
           )}
 
-          {tab !== 'firebase' && (
-            <div className="flex gap-3 pt-2">
-              <button className="btn-secondary flex-1" onClick={onClose}>Cancel</button>
-              <button className="btn-primary flex-1" onClick={handleSaveAll}>Save Settings</button>
-            </div>
-          )}
         </div>
       </div>
     </div>

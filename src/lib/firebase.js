@@ -11,39 +11,37 @@ import {
   query,
 } from 'firebase/firestore'
 
-const DEFAULT_CONFIG = {
-  apiKey: "AIzaSyD6kuseDrOY1mffhecWyYZlDsGz8MiUKhA",
-  authDomain: "meeting-26ae0.firebaseapp.com",
-  projectId: "meeting-26ae0",
-  storageBucket: "meeting-26ae0.firebasestorage.app",
-  messagingSenderId: "787728175639",
-  appId: "1:787728175639:web:7434ab3efef9720dac4252",
+export function isFirebaseConfigured() {
+  const stored = localStorage.getItem('mwi_firebase_config')
+  if (!stored) return false
+  try {
+    const parsed = JSON.parse(stored)
+    return !!(parsed.apiKey && parsed.projectId)
+  } catch {
+    return false
+  }
 }
 
 function getConfig() {
   const stored = localStorage.getItem('mwi_firebase_config')
-  if (stored) {
-    try {
-      const parsed = JSON.parse(stored)
-      if (parsed.apiKey && parsed.projectId) return parsed
-    } catch {}
-  }
-  return DEFAULT_CONFIG
+  if (!stored) return null
+  try {
+    const parsed = JSON.parse(stored)
+    if (parsed.apiKey && parsed.projectId) return parsed
+  } catch {}
+  return null
 }
 
 function getDb() {
   const config = getConfig()
-  // Reuse existing app if config hasn't changed
+  if (!config) throw new Error('Firebase not configured')
   const existing = getApps().find(a => a.name === '[DEFAULT]')
-  if (existing) {
-    return getFirestore(existing)
-  }
+  if (existing) return getFirestore(existing)
   const app = initializeApp(config)
   return getFirestore(app)
 }
 
 export function saveFirebaseConfig(config) {
-  // Tear down existing app so next call to getDb() reinitializes with new config
   const existing = getApps().find(a => a.name === '[DEFAULT]')
   if (existing) deleteApp(existing)
   localStorage.setItem('mwi_firebase_config', JSON.stringify(config))

@@ -8,7 +8,7 @@ import SettingsModal from './components/SettingsModal'
 import MeetingHistory from './components/MeetingHistory'
 import MeetingTemplates from './components/MeetingTemplates'
 import TeamModal from './components/TeamModal'
-import { loadTeamMembers, addTeamMember, deleteTeamMember } from './lib/firebase'
+import { loadTeamMembers, addTeamMember, deleteTeamMember, isFirebaseConfigured } from './lib/firebase'
 
 const RECURRENCE_MULTIPLIERS = {
   'one-time': 1,
@@ -47,14 +47,17 @@ export default function App() {
   const [city, setCity] = useState(localStorage.getItem('mwi_city') || 'Remote')
   const [industry, setIndustry] = useState(localStorage.getItem('mwi_industry') || 'Tech')
 
-  // Load team from Supabase on mount and when credentials change
   const refreshTeam = useCallback(async () => {
+    if (!isFirebaseConfigured()) {
+      setTeamMembers([])
+      return
+    }
     setTeamLoading(true)
     try {
       const data = await loadTeamMembers()
       setTeamMembers(data)
     } catch {
-      // Supabase not configured yet — silent fail
+      // Firebase config invalid or network error — silent fail
     } finally {
       setTeamLoading(false)
     }

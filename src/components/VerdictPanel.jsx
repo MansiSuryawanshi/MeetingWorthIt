@@ -63,22 +63,53 @@ function Section({ title, children }) {
   )
 }
 
-function SavingsCalculator({ annualCost, recurrence }) {
+function SavingsCard({ annualCost, recurrence, score }) {
   if (recurrence === 'one-time' || annualCost < 500) return null
+
+  // Calculate potential savings based on score
+  // Low score = high savings potential, high score = low savings
+  let savingsPercent, savingsLabel, savingsBg, savingsBorder, savingsColor
+  if (score <= 3) {
+    savingsPercent = 0.85
+    savingsLabel = 'Cancel or replace with async — recover most of this cost'
+    savingsBg = 'rgba(239,68,68,0.08)'
+    savingsBorder = 'rgba(239,68,68,0.2)'
+    savingsColor = '#ef4444'
+  } else if (score <= 5) {
+    savingsPercent = 0.50
+    savingsLabel = 'Cut attendees and shorten — save half the annual spend'
+    savingsBg = 'rgba(245,158,11,0.08)'
+    savingsBorder = 'rgba(245,158,11,0.2)'
+    savingsColor = '#f59e0b'
+  } else if (score <= 7) {
+    savingsPercent = 0.25
+    savingsLabel = 'Optimize attendees — reduce cost by up to 25%'
+    savingsBg = 'rgba(0,255,135,0.06)'
+    savingsBorder = 'rgba(0,255,135,0.15)'
+    savingsColor = '#00ff87'
+  } else {
+    return null // high score = meeting is justified, no savings to show
+  }
+
+  const potentialSavings = Math.round(annualCost * savingsPercent)
+
   return (
     <div
       className="rounded-xl p-4 text-center"
-      style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)' }}
+      style={{ background: savingsBg, border: `1px solid ${savingsBorder}` }}
     >
-      <p className="text-white/50 text-xs uppercase tracking-widest mb-1 font-medium">
-        Cancel This Meeting → Save
+      <p className="text-white/40 text-[11px] uppercase tracking-[0.15em] font-semibold mb-2">
+        Potential Annual Savings
       </p>
       <p
-        className="font-black text-3xl"
-        style={{ fontFamily: 'Outfit, sans-serif', color: '#ef4444' }}
+        className="font-black text-3xl leading-none mb-2"
+        style={{ fontFamily: 'Outfit, sans-serif', color: savingsColor }}
       >
-        ${Math.round(annualCost).toLocaleString()}
-        <span className="text-base font-normal text-white/30 ml-1">/year</span>
+        ${potentialSavings.toLocaleString()}
+        <span className="text-sm font-normal text-white/25 ml-1">/year</span>
+      </p>
+      <p className="text-white/35 text-xs leading-relaxed max-w-xs mx-auto">
+        {savingsLabel}
       </p>
     </div>
   )
@@ -87,17 +118,14 @@ function SavingsCalculator({ annualCost, recurrence }) {
 export default function VerdictPanel({ verdict, attendees, annualCost, recurrence }) {
   const [showAsyncTooltip, setShowAsyncTooltip] = useState(false)
   const [markedWorthIt, setMarkedWorthIt] = useState(false)
-  const showSavings = verdict.necessityScore <= 4 && recurrence !== 'one-time'
 
   return (
     <div className="card space-y-5 verdict-animate">
       {/* Score */}
       <ScoreBadge score={verdict.necessityScore} label={verdict.scoreLabel} />
 
-      {/* Savings calculator — only shown for low scores */}
-      {showSavings && (
-        <SavingsCalculator annualCost={annualCost} recurrence={recurrence} />
-      )}
+      {/* Savings card — shown for low/medium scores with recurring meetings */}
+      <SavingsCard annualCost={annualCost} recurrence={recurrence} score={verdict.necessityScore} />
 
       {/* Key Question */}
       <Section title="Key Question to Answer">
@@ -115,7 +143,7 @@ export default function VerdictPanel({ verdict, attendees, annualCost, recurrenc
           {verdict.attendeeAnalysis?.map((a, i) => (
             <div
               key={i}
-              className="flex items-start justify-between gap-3 p-3 rounded-lg"
+              className="flex items-start justify-between gap-3 p-3 rounded-lg transition-all duration-200 hover:bg-white/[0.04]"
               style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
             >
               <div>

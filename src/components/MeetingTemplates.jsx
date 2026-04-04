@@ -130,10 +130,16 @@ const TEMPLATES = [
   },
 ]
 
+function formatDuration(min) {
+  if (min < 60) return `${min}m`
+  if (min % 60 === 0) return `${min / 60}h`
+  return `${Math.floor(min / 60)}h${min % 60}m`
+}
+
 export default function MeetingTemplates({ onApply }) {
   return (
     <div className="card">
-      <p className="text-xs uppercase tracking-widest font-semibold mb-3" style={{ color: 'rgba(255,255,255,0.3)' }}>
+      <p className="text-xs uppercase tracking-[0.15em] font-semibold mb-3" style={{ color: 'rgba(255,255,255,0.3)' }}>
         Quick Templates
       </p>
       <div className="grid grid-cols-5 gap-2">
@@ -141,7 +147,7 @@ export default function MeetingTemplates({ onApply }) {
           <button
             key={t.label}
             onClick={() => onApply(t)}
-            className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-xl text-center transition-all"
+            className="group flex flex-col items-center gap-1 py-3 px-1 rounded-xl text-center transition-all duration-200 hover:-translate-y-0.5"
             style={{
               background: 'rgba(255,255,255,0.04)',
               border: '1px solid rgba(255,255,255,0.08)',
@@ -149,14 +155,19 @@ export default function MeetingTemplates({ onApply }) {
             onMouseEnter={e => {
               e.currentTarget.style.background = 'rgba(0,255,135,0.07)'
               e.currentTarget.style.borderColor = 'rgba(0,255,135,0.25)'
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)'
             }}
             onMouseLeave={e => {
               e.currentTarget.style.background = 'rgba(255,255,255,0.04)'
               e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'
+              e.currentTarget.style.boxShadow = 'none'
             }}
           >
-            <span className="text-lg">{t.emoji}</span>
-            <span className="text-white/70 text-xs font-medium leading-tight">{t.label}</span>
+            <span className="text-lg mb-0.5">{t.emoji}</span>
+            <span className="text-white/70 text-[11px] font-medium leading-tight">{t.label}</span>
+            <span className="text-white/25 text-[10px] leading-tight mt-0.5">
+              {t.attendees.length}p · {formatDuration(t.duration)}
+            </span>
           </button>
         ))}
       </div>

@@ -8,7 +8,10 @@ import SettingsModal from './components/SettingsModal'
 import MeetingHistory from './components/MeetingHistory'
 import MeetingTemplates from './components/MeetingTemplates'
 import TeamModal from './components/TeamModal'
+import DemoScenarioModal from './components/DemoScenarioModal'
+import DemoBadge from './components/DemoBadge'
 import { loadTeamMembers, addTeamMember, deleteTeamMember, isFirebaseConfigured } from './lib/firebase'
+import { isDemoEnv, getDemoVerdict } from './utils/demoMode'
 
 const RECURRENCE_MULTIPLIERS = {
   'one-time': 1,
@@ -39,6 +42,11 @@ export default function App() {
     JSON.parse(localStorage.getItem('mwi_history') || '[]')
   )
 
+  // Demo mode state
+  const [demoMode, setDemoMode] = useState(false)
+  const [demoScenarioId, setDemoScenarioId] = useState(null)
+  const [showDemoModal, setShowDemoModal] = useState(false)
+
   // Team database
   const [teamMembers, setTeamMembers] = useState([])
   const [teamLoading, setTeamLoading] = useState(false)
@@ -67,6 +75,13 @@ export default function App() {
     refreshTeam()
   }, [refreshTeam])
 
+  // Auto-show demo modal when launched with VITE_APP_MODE=demo
+  useEffect(() => {
+    if (isDemoEnv()) {
+      setShowDemoModal(true)
+    }
+  }, [])
+
   // Cost math
   const totalCost = attendees.reduce((sum, a) => {
     const hourlyRate = a.salary / 2080
@@ -93,9 +108,36 @@ export default function App() {
     setRecurrence(template.recurrence)
     setVerdict(null)
     setApiError(null)
+    setAgenda(template.agenda || '')
+    setContext(template.context || '')
+    setAttendees(template.attendees.map(a => ({ ...a, id: nextId++ })))
+  }, [])
+
+  const enterDemo = useCallback((scenario) => {
+    setDemoMode(true)
+    setDemoScenarioId(scenario.id)
+    setShowDemoModal(false)
+    setVerdict(null)
+    setApiError(null)
+    setMeetingTitle(scenario.title)
+    setDuration(scenario.duration)
+    setRecurrence(scenario.recurrence)
+    setAgenda(scenario.agenda)
+    setContext(scenario.context)
+    setAttendees(scenario.attendees.map(a => ({ ...a, id: nextId++ })))
+  }, [])
+
+  const exitDemo = useCallback(() => {
+    setDemoMode(false)
+    setDemoScenarioId(null)
+    setVerdict(null)
+    setApiError(null)
+    setMeetingTitle('')
+    setDuration(60)
+    setRecurrence('weekly')
     setAgenda('')
     setContext('')
-    setAttendees(template.attendees.map(a => ({ ...a, id: nextId++ })))
+    setAttendees([{ id: nextId++, role: 'Product Manager', salary: 110000 }])
   }, [])
 
   const saveApiKey = useCallback((key) => {
@@ -121,6 +163,35 @@ export default function App() {
   }, [])
 
   const handleAnalyze = useCallback(async () => {
+    // --- Demo Mode: use mock verdict instead of real API ---
+    if (demoMode) {
+      setIsAnalyzing(true)
+      setVerdict(null)
+      setApiError(null)
+
+      // Simulate a brief analysis delay for realism
+      await new Promise(r => setTimeout(r, 1500))
+
+      const result = getDemoVerdict(demoScenarioId)
+      setVerdict(result)
+
+      const entry = {
+        id: Date.now(),
+        title: meetingTitle,
+        cost: Math.round(totalCost),
+        annualCost: Math.round(annualCost),
+        score: result.necessityScore,
+        recurrence,
+        timestamp: new Date().toISOString(),
+      }
+      const newHistory = [entry, ...history].slice(0, 5)
+      setHistory(newHistory)
+      localStorage.setItem('mwi_history', JSON.stringify(newHistory))
+      setIsAnalyzing(false)
+      return
+    }
+
+    // --- Live Mode: real Anthropic API call ---
     if (!apiKey) { setShowSettings(true); return }
     setIsAnalyzing(true)
     setVerdict(null)
@@ -195,7 +266,7 @@ Respond with this exact JSON structure:
     } finally {
       setIsAnalyzing(false)
     }
-  }, [apiKey, meetingTitle, duration, totalCost, attendees, history, annualCost, recurrence, agenda, context])
+  }, [demoMode, demoScenarioId, apiKey, meetingTitle, duration, totalCost, attendees, history, annualCost, recurrence, agenda, context])
 
   const canAnalyze = meetingTitle.trim().length > 0 && attendees.length > 0
 
@@ -239,25 +310,52 @@ Respond with this exact JSON structure:
       </header>
 
       {/* Hero tagline */}
-      <div className="max-w-5xl mx-auto px-6 pt-10 pb-6 text-center">
-        <h1 className="text-3xl md:text-4xl font-black text-white mb-2 tracking-tight"
+      <div className="max-w-5xl mx-auto px-6 pt-12 pb-8 text-center">
+        <h1 className="text-3xl md:text-5xl font-black text-white mb-3 tracking-tight leading-[1.1]"
           style={{ fontFamily: 'Outfit, sans-serif' }}>
           Is this meeting worth it?
         </h1>
-        <p className="text-white/40 text-base">
-          See the real dollar cost of your meeting — then let AI decide if it's justified.
+        <p className="text-white/35 text-base md:text-lg max-w-xl mx-auto leading-relaxed">
+          That weekly meeting you never question? It might be quietly costing
+          your team <span className="text-white/60 font-medium">thousands every year</span>.
         </p>
         {city !== 'Remote' && (
-          <p className="text-white/20 text-xs mt-1">
+          <p className="text-white/15 text-xs mt-2">
             Salary benchmarks: {city} · {industry}
           </p>
+        )}
+        {!demoMode && (
+          <div className="mt-6 flex flex-col items-center gap-2">
+            <button
+              onClick={() => setShowDemoModal(true)}
+              className="inline-flex items-center gap-2.5 px-6 py-3 rounded-xl text-sm font-bold transition-all duration-200"
+              style={{
+                background: 'linear-gradient(135deg, rgba(0,255,135,0.15), rgba(0,255,135,0.08))',
+                border: '1px solid rgba(0,255,135,0.3)',
+                color: '#00ff87',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = 'linear-gradient(135deg, rgba(0,255,135,0.22), rgba(0,255,135,0.12))'
+                e.currentTarget.style.boxShadow = '0 0 30px rgba(0,255,135,0.12)'
+                e.currentTarget.style.transform = 'translateY(-2px)'
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = 'linear-gradient(135deg, rgba(0,255,135,0.15), rgba(0,255,135,0.08))'
+                e.currentTarget.style.boxShadow = 'none'
+                e.currentTarget.style.transform = 'translateY(0)'
+              }}
+            >
+              ▶ Try Demo
+            </button>
+            <span className="text-white/20 text-xs">Try a real scenario in seconds — no API key needed</span>
+          </div>
         )}
       </div>
 
       {/* Main layout */}
-      <div className="max-w-5xl mx-auto px-4 pb-16 grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+      <div className="max-w-5xl mx-auto px-4 pb-16 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
         {/* Left column */}
-        <div className="space-y-5">
+        <div className="space-y-6">
           <MeetingTemplates onApply={applyTemplate} />
           <MeetingForm
             meetingTitle={meetingTitle} setMeetingTitle={setMeetingTitle}
@@ -307,7 +405,7 @@ Respond with this exact JSON structure:
         </div>
 
         {/* Right column */}
-        <div className="space-y-5">
+        <div className="space-y-6 lg:sticky lg:top-6">
           <CostDisplay
             totalCost={totalCost} annualCost={annualCost}
             recurrence={recurrence} score={verdict?.necessityScore}
@@ -316,6 +414,7 @@ Respond with this exact JSON structure:
           <AnalyzeButton
             onClick={handleAnalyze} disabled={!canAnalyze}
             isAnalyzing={isAnalyzing} hasApiKey={!!apiKey}
+            demoMode={demoMode}
           />
           {apiError && (
             <div className="rounded-xl p-4 text-sm"
@@ -340,6 +439,15 @@ Respond with this exact JSON structure:
       )}
 
       {/* Modals */}
+      {/* Demo UI */}
+      {demoMode && <DemoBadge onExit={exitDemo} />}
+      {showDemoModal && (
+        <DemoScenarioModal
+          onSelect={enterDemo}
+          onClose={() => setShowDemoModal(false)}
+        />
+      )}
+
       {showSettings && (
         <SettingsModal
           apiKey={apiKey} onSave={saveApiKey} onClose={() => { setShowSettings(false); refreshTeam() }}

@@ -21,12 +21,17 @@
   .card {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    border-radius: 16px;
     padding: 1.5rem;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .card:hover {
+    border-color: rgba(255, 255, 255, 0.14);
   }
 
   .input-field {
-    @apply w-full rounded-lg px-3 py-2 text-white text-sm
+    @apply w-full rounded-lg px-3 py-2.5 text-white text-sm
            focus:outline-none focus:ring-2 focus:ring-[#00ff87]/40 focus:border-[#00ff87]/40
            placeholder-white/30 transition-all;
     background: rgba(255, 255, 255, 0.05);
@@ -34,7 +39,7 @@
   }
 
   .select-field {
-    @apply w-full rounded-lg px-3 py-2 text-white text-sm
+    @apply w-full rounded-lg px-3 py-2.5 text-white text-sm
            focus:outline-none focus:ring-2 focus:ring-[#00ff87]/40 focus:border-[#00ff87]/40
            transition-all cursor-pointer;
     background: rgba(255, 255, 255, 0.05);
@@ -67,11 +72,26 @@
     font-family: 'Outfit', sans-serif;
     background: linear-gradient(135deg, #00ff87, #00cc6a);
     color: #0f1117;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-primary::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent, rgba(255,255,255,0.1), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .btn-primary:hover:not(:disabled)::after {
+    opacity: 1;
   }
 
   .btn-primary:hover:not(:disabled) {
-    transform: translateY(-1px);
-    box-shadow: 0 8px 24px rgba(0, 255, 135, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0, 255, 135, 0.25), 0 0 60px rgba(0, 255, 135, 0.08);
   }
 
   .btn-primary:active:not(:disabled) {
@@ -85,17 +105,19 @@
 
   .btn-secondary {
     @apply py-2.5 px-5 rounded-xl font-medium text-sm transition-all duration-200;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.7);
   }
 
   .btn-secondary:hover {
-    border-color: rgba(255, 255, 255, 0.4);
+    border-color: rgba(255, 255, 255, 0.35);
     color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   }
 
   .verdict-animate {
-    animation: fadeUp 0.4s ease forwards;
+    animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 
   .analyzing-pulse {
@@ -104,13 +126,18 @@
 }
 
 @keyframes fadeUp {
-  0% { opacity: 0; transform: translateY(12px); }
+  0% { opacity: 0; transform: translateY(16px); }
   100% { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes pulseGlow {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.35; }
+}
+
+@keyframes slideDown {
+  0% { opacity: 0; transform: translateX(-50%) translateY(-100%); }
+  100% { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
 ::-webkit-scrollbar { width: 6px; }

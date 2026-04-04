@@ -1,4 +1,8 @@
-export default function AnalyzeButton({ onClick, disabled, isAnalyzing, hasApiKey }) {
+export default function AnalyzeButton({ onClick, disabled, isAnalyzing, hasApiKey, demoMode }) {
+  const label = demoMode
+    ? 'Analyze This Meeting (Demo) →'
+    : (!hasApiKey ? '🔑 Set API Key to Analyze' : 'Analyze This Meeting →')
+
   return (
     <button
       className="btn-primary"
@@ -11,9 +15,7 @@ export default function AnalyzeButton({ onClick, disabled, isAnalyzing, hasApiKe
           Analyzing...
         </>
       ) : (
-        <>
-          {!hasApiKey ? '🔑 Set API Key to Analyze' : 'Analyze This Meeting →'}
-        </>
+        label
       )}
     </button>
   )

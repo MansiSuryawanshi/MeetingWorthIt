@@ -132,6 +132,7 @@ export default function AttendeeRow({ attendee, onUpdate, onRemove, canRemove, t
           <div className="space-y-1.5">
             <select
               className="select-field"
+              style={{ fontSize: '14px', height: '40px' }}
               value={selectedLabel()}
               onChange={handlePresetChange}
             >

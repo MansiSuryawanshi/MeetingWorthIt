@@ -115,7 +115,7 @@ function SavingsCard({ annualCost, recurrence, score }) {
   )
 }
 
-export default function VerdictPanel({ verdict, attendees, annualCost, recurrence }) {
+export default function VerdictPanel({ verdict, attendees, annualCost, recurrence, meetLink }) {
   const [showAsyncTooltip, setShowAsyncTooltip] = useState(false)
   const [markedWorthIt, setMarkedWorthIt] = useState(false)
 
@@ -192,6 +192,29 @@ export default function VerdictPanel({ verdict, attendees, annualCost, recurrenc
           💡 {verdict.actionableFix}
         </div>
       </Section>
+
+      {/* Google Meet button — only if imported from Google Calendar */}
+      {meetLink && (
+        <a
+          href={meetLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-bold transition-all"
+          style={{
+            background: verdict.necessityScore >= 5
+              ? 'linear-gradient(135deg, rgba(0,255,135,0.15), rgba(0,204,106,0.1))'
+              : 'rgba(255,255,255,0.05)',
+            border: `1px solid ${verdict.necessityScore >= 5 ? 'rgba(0,255,135,0.3)' : 'rgba(255,255,255,0.1)'}`,
+            color: verdict.necessityScore >= 5 ? '#00ff87' : 'rgba(255,255,255,0.4)',
+          }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M15 10l4.553-2.276A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"
+              stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          {verdict.necessityScore >= 5 ? 'Join Google Meet — Worth It ✓' : 'Join Google Meet Anyway'}
+        </a>
+      )}
 
       {/* Action buttons */}
       <div className="flex gap-3 pt-1">

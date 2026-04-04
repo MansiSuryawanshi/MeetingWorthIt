@@ -8,10 +8,16 @@ import SettingsModal from './components/SettingsModal'
 import MeetingHistory from './components/MeetingHistory'
 import MeetingTemplates from './components/MeetingTemplates'
 import TeamModal from './components/TeamModal'
+
 import DemoScenarioModal from './components/DemoScenarioModal'
 import DemoBadge from './components/DemoBadge'
 import { loadTeamMembers, addTeamMember, deleteTeamMember, isFirebaseConfigured } from './lib/firebase'
 import { isDemoEnv, getDemoVerdict } from './utils/demoMode'
+
+import CalendarImportModal from './components/CalendarImportModal'
+import { loadTeamMembers, addTeamMember, deleteTeamMember, isFirebaseConfigured } from './lib/firebase'
+import { isGoogleCalendarConfigured } from './lib/googleCalendar'
+
 
 const RECURRENCE_MULTIPLIERS = {
   'one-time': 1,
@@ -37,6 +43,8 @@ export default function App() {
   const [apiKey, setApiKey] = useState(localStorage.getItem('mwi_api_key') || '')
   const [showSettings, setShowSettings] = useState(false)
   const [showTeam, setShowTeam] = useState(false)
+  const [showCalendarImport, setShowCalendarImport] = useState(false)
+  const [meetLink, setMeetLink] = useState(null)
   const [apiError, setApiError] = useState(null)
   const [history, setHistory] = useState(
     JSON.parse(localStorage.getItem('mwi_history') || '[]')
@@ -137,7 +145,23 @@ export default function App() {
     setRecurrence('weekly')
     setAgenda('')
     setContext('')
+<<<<<<< HEAD
     setAttendees([{ id: nextId++, role: 'Product Manager', salary: 110000 }])
+=======
+    setMeetLink(null)
+    setAttendees(template.attendees.map(a => ({ ...a, id: nextId++ })))
+>>>>>>> upstream/main
+  }, [])
+
+  const handleCalendarImport = useCallback(({ title, duration, recurrence, agenda, meetLink }) => {
+    setMeetingTitle(title)
+    setDuration(duration)
+    setRecurrence(recurrence)
+    setAgenda(agenda || '')
+    setContext('')
+    setVerdict(null)
+    setApiError(null)
+    setMeetLink(meetLink || null)
   }, [])
 
   const saveApiKey = useCallback((key) => {
@@ -285,6 +309,16 @@ Respond with this exact JSON structure:
             </span>
           </div>
           <div className="flex items-center gap-3">
+            {/* Google Calendar import */}
+            {isGoogleCalendarConfigured() && (
+              <button
+                onClick={() => setShowCalendarImport(true)}
+                className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg transition-all"
+                style={{ color: '#93c5fd', background: 'rgba(66,133,244,0.08)', border: '1px solid rgba(66,133,244,0.2)' }}
+              >
+                📅 Import from Calendar
+              </button>
+            )}
             {/* Team button */}
             <button
               onClick={() => setShowTeam(true)}
@@ -355,115 +389,135 @@ Respond with this exact JSON structure:
       {/* Main layout */}
       <div className="max-w-5xl mx-auto px-4 pb-16 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
         {/* Left column */}
-        <div className="space-y-6">
-          <MeetingTemplates onApply={applyTemplate} />
-          <MeetingForm
-            meetingTitle={meetingTitle} setMeetingTitle={setMeetingTitle}
-            duration={duration} setDuration={setDuration}
-            recurrence={recurrence} setRecurrence={setRecurrence}
-            agenda={agenda} setAgenda={setAgenda}
-            context={context} setContext={setContext}
-          />
+<<<<<<< HEAD
+  <div className="space-y-6">
+=======
+        <div className="space-y-5">
+      {showCalendarImport && (
+        <CalendarImportModal
+          onClose={() => setShowCalendarImport(false)}
+          onImport={handleCalendarImport}
+        />
+      )}
+>>>>>>> upstream/main
+      <MeetingTemplates onApply={applyTemplate} />
+      <MeetingForm
+        meetingTitle={meetingTitle} setMeetingTitle={setMeetingTitle}
+        duration={duration} setDuration={setDuration}
+        recurrence={recurrence} setRecurrence={setRecurrence}
+        agenda={agenda} setAgenda={setAgenda}
+        context={context} setContext={setContext}
+      />
 
-          {/* Attendees */}
-          <div className="card">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-white font-semibold" style={{ fontFamily: 'Outfit, sans-serif' }}>
-                Attendees
-              </h2>
-              <div className="flex items-center gap-2">
-                {teamMembers.length > 0 && (
-                  <span className="text-xs" style={{ color: 'rgba(0,255,135,0.6)' }}>
-                    👥 tap to pick from team
-                  </span>
-                )}
-                <span className="text-white/40 text-xs">{attendees.length} person{attendees.length !== 1 ? 's' : ''}</span>
-              </div>
-            </div>
-            <div className="space-y-3">
-              {attendees.map(a => (
-                <AttendeeRow
-                  key={a.id}
-                  attendee={a}
-                  onUpdate={updateAttendee}
-                  onRemove={removeAttendee}
-                  canRemove={attendees.length > 1}
-                  teamMembers={teamMembers}
-                  city={city}
-                  industry={industry}
-                />
-              ))}
-            </div>
-            <button
-              onClick={addAttendee}
-              className="mt-4 w-full py-2.5 rounded-lg text-sm font-medium transition-all"
-              style={{ background: 'rgba(0,255,135,0.08)', border: '1px dashed rgba(0,255,135,0.3)', color: '#00ff87' }}
-            >
-              + Add Attendee
-            </button>
+      {/* Attendees */}
+      <div className="card">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-white font-semibold" style={{ fontFamily: 'Outfit, sans-serif' }}>
+            Attendees
+          </h2>
+          <div className="flex items-center gap-2">
+            {teamMembers.length > 0 && (
+              <span className="text-xs" style={{ color: 'rgba(0,255,135,0.6)' }}>
+                👥 tap to pick from team
+              </span>
+            )}
+            <span className="text-white/40 text-xs">{attendees.length} person{attendees.length !== 1 ? 's' : ''}</span>
           </div>
         </div>
-
-        {/* Right column */}
-        <div className="space-y-6 lg:sticky lg:top-6">
-          <CostDisplay
-            totalCost={totalCost} annualCost={annualCost}
-            recurrence={recurrence} score={verdict?.necessityScore}
-            isAnalyzing={isAnalyzing}
-          />
-          <AnalyzeButton
-            onClick={handleAnalyze} disabled={!canAnalyze}
-            isAnalyzing={isAnalyzing} hasApiKey={!!apiKey}
-            demoMode={demoMode}
-          />
-          {apiError && (
-            <div className="rounded-xl p-4 text-sm"
-              style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5' }}>
-              {apiError}
-            </div>
-          )}
-          {verdict && (
-            <VerdictPanel
-              verdict={verdict} attendees={attendees}
-              annualCost={annualCost} recurrence={recurrence}
+        <div className="space-y-3">
+          {attendees.map(a => (
+            <AttendeeRow
+              key={a.id}
+              attendee={a}
+              onUpdate={updateAttendee}
+              onRemove={removeAttendee}
+              canRemove={attendees.length > 1}
+              teamMembers={teamMembers}
+              city={city}
+              industry={industry}
             />
-          )}
+          ))}
         </div>
+        <button
+          onClick={addAttendee}
+          className="mt-4 w-full py-2.5 rounded-lg text-sm font-medium transition-all"
+          style={{ background: 'rgba(0,255,135,0.08)', border: '1px dashed rgba(0,255,135,0.3)', color: '#00ff87' }}
+        >
+          + Add Attendee
+        </button>
       </div>
+    </div>
 
-      {/* History */}
-      {history.length > 0 && (
-        <div className="max-w-5xl mx-auto px-4 pb-16">
-          <MeetingHistory history={history} />
+    {/* Right column */}
+    <div className="space-y-6 lg:sticky lg:top-6">
+      <CostDisplay
+        totalCost={totalCost} annualCost={annualCost}
+        recurrence={recurrence} score={verdict?.necessityScore}
+        isAnalyzing={isAnalyzing}
+      />
+      <AnalyzeButton
+        onClick={handleAnalyze} disabled={!canAnalyze}
+        isAnalyzing={isAnalyzing} hasApiKey={!!apiKey}
+        demoMode={demoMode}
+      />
+      {apiError && (
+        <div className="rounded-xl p-4 text-sm"
+          style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5' }}>
+          {apiError}
         </div>
       )}
-
-      {/* Modals */}
-      {/* Demo UI */}
-      {demoMode && <DemoBadge onExit={exitDemo} />}
-      {showDemoModal && (
-        <DemoScenarioModal
-          onSelect={enterDemo}
-          onClose={() => setShowDemoModal(false)}
-        />
-      )}
-
-      {showSettings && (
-        <SettingsModal
-          apiKey={apiKey} onSave={saveApiKey} onClose={() => { setShowSettings(false); refreshTeam() }}
-          city={city} industry={industry} onSavePrefs={savePrefs}
-        />
-      )}
-      {showTeam && (
-        <TeamModal
-          members={teamMembers}
-          onClose={() => setShowTeam(false)}
-          onAdd={handleAddTeamMember}
-          onDelete={handleDeleteTeamMember}
-          city={city}
-          industry={industry}
+      {verdict && (
+        <VerdictPanel
+          verdict={verdict} attendees={attendees}
+          annualCost={annualCost} recurrence={recurrence}
+          meetingTitle={meetingTitle} duration={duration} totalCost={totalCost}
+          meetLink={meetLink}
         />
       )}
     </div>
+  </div>
+
+  {/* History */ }
+  {
+    history.length > 0 && (
+      <div className="max-w-5xl mx-auto px-4 pb-16">
+        <MeetingHistory history={history} />
+      </div>
+    )
+  }
+
+  {/* Modals */ }
+  {/* Demo UI */ }
+  { demoMode && <DemoBadge onExit={exitDemo} /> }
+  {
+    showDemoModal && (
+      <DemoScenarioModal
+        onSelect={enterDemo}
+        onClose={() => setShowDemoModal(false)}
+      />
+    )
+  }
+
+  {
+    showSettings && (
+      <SettingsModal
+        apiKey={apiKey} onSave={saveApiKey} onClose={() => { setShowSettings(false); refreshTeam() }}
+        city={city} industry={industry} onSavePrefs={savePrefs}
+      />
+    )
+  }
+  {
+    showTeam && (
+      <TeamModal
+        members={teamMembers}
+        onClose={() => setShowTeam(false)}
+        onAdd={handleAddTeamMember}
+        onDelete={handleDeleteTeamMember}
+        city={city}
+        industry={industry}
+      />
+    )
+  }
+    </div >
   )
 }

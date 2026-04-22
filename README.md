@@ -114,8 +114,8 @@ Built with 💙 at **Marshall Tech Fest Hackathon — April 11th, 2025**
 
 Have feedback, ideas, or just want to say hi?
 
-[![LinkedIn](https://img.shields.io/badge/Khushi%20Patel-LinkedIn-0A66C2?style=flat-square&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/mansi-suryawanshi/)
-[![GitHub](https://img.shields.io/badge/Khushipatel27-GitHub-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/MansiSuryawanshi)
+[![LinkedIn](https://img.shields.io/badge/Mansi-LinkedIn-0A66C2?style=flat-square&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/mansi-suryawanshi/)
+[![GitHub](https://img.shields.io/badge/Mansi-GitHub-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/MansiSuryawanshi)
 
 ---
 

@@ -1,3 +1,7 @@
+# 🗓️ MeetingWorthIt — Is This Meeting Worth It?
+
+> That weekly meeting you never question? It might be quietly costing your team thousands every year.
+
 ![React](https://img.shields.io/badge/React-20232A?style=flat-square&logo=react&logoColor=61DAFB)
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat-square&logo=typescript&logoColor=white)
 ![Claude API](https://img.shields.io/badge/Claude%20API-Anthropic-blueviolet?style=flat-square)

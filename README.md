@@ -1,4 +1,4 @@
-# 🗓️ MeetingWorthIt — Is This Meeting Worth It?
+# 🗓️ MeetingWorthIt - Is This Meeting Worth It?
 
 > *That weekly meeting you never question? It might be quietly costing your team thousands every year.*
 
@@ -105,8 +105,8 @@ Built with 💙 at **Marshall Tech Fest Hackathon — April 11th, 2025**
 
 | Builder | GitHub |
 |---|---|
-| Khushi Patel | [@Khushipatel27](https://github.com/Khushipatel27) |
 | Mansi Suryawanshi | [@MansiSuryawanshi](https://github.com/MansiSuryawanshi) |
+| Khushi Patel | [@Khushipatel27](https://github.com/Khushipatel27) |
 
 ---
 

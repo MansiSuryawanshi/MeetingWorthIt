@@ -1,4 +1,4 @@
-# 🗓️ MeetingWorthIt — Is This Meeting Worth It?
+# 🗓️ MeetingWorthIt - Is This Meeting Worth It?
 
 > That weekly meeting you never question? It might be quietly costing your team thousands every year.
 
